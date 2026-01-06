@@ -1,0 +1,19 @@
+;; shadow-cljs configuration
+{:source-paths
+ ["src/dev"
+  "src/main"
+  "src/test"]
+
+ :dependencies
+ [[no.cjohansen/dataspex "2025.10.1"]
+  [no.cjohansen/portfolio "2025.08.29"]
+  [no.cjohansen/replicant "2025.06.21"]]
+
+ :builds
+ {:app {:target :browser
+        :output-dir "public/assets/app/js"
+        :asset-path "/assets/app/js"
+        :modules {:main {:entries [main]}}}}
+ :dev-http {8080 {:root "public"}}}
+
+
