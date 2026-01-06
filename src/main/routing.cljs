@@ -4,7 +4,8 @@
    [config :as c]))
 
 (defn extract-location [path]
-  (or (when (= "/" path)
+  (or (when (or (= "/" path)
+                (= "" path))
         {:location/page-id (nth c/page-names 0)})
       (when-let [[_ target] (re-find #"/?#/(\w+)/?" path)]
         (when (some #(= (s/replace target #"_" " ") %) c/page-names)

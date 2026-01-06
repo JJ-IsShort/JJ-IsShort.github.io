@@ -41,7 +41,9 @@
                                     [:div "[W] - Work in progress"]
                                     [:div "[A] - Abandoned"]
                                     [:div "[ ] - Unplanned"]]
-                                   (text->divs "╭ [A] Ray tracing first game engine (Pizza Box Engine)")])
+                                   (text->divs "
+                                               ╭ [A] Ray tracing first game engine (Pizza Box Engine)
+                                               ╰ [W] The rest of my projects lol. I need to populate this and it will be a lot of work")])
                            (panel "Pizza_Box_Engine.cpp"
                                   [(text->divs "This was an attempt to make a ray tracing first game engine, with optimizations that only fully ray traced (as in VK_KHR_ray_tracing_pipeline instead of VK_KHR_ray_query in a fragment shader) rendering can provide.
                                                

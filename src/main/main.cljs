@@ -147,7 +147,7 @@
   (reset! store {:page-names config/page-names
                  :taskbar-page-select {:active false :mouse-y-start 0}
                  :mouse-pos {:x 0 :y 0}
-                 :selected-page (routing/extract-location js/location.hash)}))
+                 :selected-page (routing/extract-location (config/ins js/location.hash))}))
 
 ; (js/window.addEventListener
 ;      "popstate"
