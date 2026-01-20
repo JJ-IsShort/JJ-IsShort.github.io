@@ -124,7 +124,7 @@
              [:div {:class [:ml-2 :w-full :h-fit]}
               [:div {:class [:text-lg :font-black]}
                page-name]]]))]]]]]
-   [:div {:class [:w-full :min-h-screen (styling/color-tag "bg" :base)]}
+   [:div {:class [:w-full :min-h-screen (styling/color-tag "bg" :base) "-z-500" :relative]}
     [:div {:class [:w-full :h-20]}]
     [:div {:class [:w-full :h-8]}]
     ((config/get-page-def (:location/page-id (:selected-page state)) :render) state)
@@ -150,7 +150,7 @@
   (reset! store {:page-names config/page-names
                  :taskbar-page-select {:active false :mouse-y-start 0}
                  :mouse-pos {:x 0 :y 0}
-                 :selected-page (routing/extract-location (config/ins js/location.hash))}))
+                 :selected-page (routing/extract-location js/location.hash)}))
 
 ; (js/window.addEventListener
 ;      "popstate"
