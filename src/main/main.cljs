@@ -127,14 +127,17 @@
    [:div {:class [:w-full :min-h-screen (styling/color-tag "bg" :base)]}
     [:div {:class [:w-full :h-20]}]
     [:div {:class [:w-full :h-8]}]
-    ((some #(get % (keyword (s/replace (:location/page-id (:selected-page state)) #" " "_"))) config/site-definition) state)
+    ((config/get-page-def (:location/page-id (:selected-page state)) :render) state)
     [:div {:class [:w-full :h-8]}]]])
 
 (defn ^:dev/after-load start []
   (add-watch
    store ::render
    (fn [_ _ _ state]
-     (r/render el (make-page state))))
+     (r/render el (make-page state))
+     (when-let [post-render-func (config/get-page-def (:location/page-id (:selected-page state)) :post-render)]
+       (post-render-func state))))
+
   (let [computed-style (.-style (.querySelector js/document ":root"))
         default-colors {:base "#121212"
                         :text "#f1f1f1"
