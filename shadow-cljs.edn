@@ -2,7 +2,8 @@
 {:source-paths
  ["src/dev"
   "src/main"
-  "src/test"]
+  "src/test"
+  ".shadow-cljs/generated"]
 
  :dependencies
  [[no.cjohansen/dataspex "2025.10.1"]
@@ -13,6 +14,8 @@
  {:app {:target :browser
         :output-dir "public/assets/app/js"
         :asset-path "/assets/app/js"
+        ;:cache-blockers #{uncached}
+        :build-hooks [(build-hooks/generate-project-index)]
         :modules {:main {:entries [main]}}}}
  :dev-http {8080 {:root "public"}}}
 

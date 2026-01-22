@@ -34,14 +34,16 @@
                               (.preventDefault e)
                               (.pushState js/history "" "" (str "#/" page-name "/"))
                               (swap! store assoc :selected-page (routing/extract-location
-                                                                 (str "#/" page-name "/")))))
+                                                                 (str "#/" page-name "/")
+                                                                 config/page-names))))
          (swap! store assoc-in [:taskbar-page-select :active] false))))
 
 (defn make-page [state]
-  [:div.min-h-screen
-   [:div {:class [:fixed :inset-0 :overflow-hidden]}
+  [:div {:class [:min-h-screen]}
+   [:div {:class [:fixed :inset-0 :overflow-hidden :-z-50]}
     [:div {:class ["w-[calc(100%_-_var(--spacing)_*_4)]" :border-3 (styling/color-tag "border" :highlight) :h-16 :m-2 (styling/color-tag "bg" :base) :absolute :flex]}
-     [:div {:class ["basis-1/3"]}] ; Left bar section
+     [:div {:class ["basis-1/3"]}
+      [:li {:on {:click (fn [e] (println "SSSDAFSCS"))}} "Test"]] ; Left bar section
      [:div {:class ["basis-1/3"]}] ; Centre bar section
      [:div {:class ["basis-1/3"]} ; Right bar section
       [:div {:class ["my-[5px]" "h-[calc(100%-5px*2)]" "mr-[5px]" :rounded-md :relative]
@@ -127,7 +129,7 @@
    [:div {:class [:w-full :min-h-screen (styling/color-tag "bg" :base) "-z-500" :relative]}
     [:div {:class [:w-full :h-20]}]
     [:div {:class [:w-full :h-8]}]
-    ((config/get-page-def (:location/page-id (:selected-page state)) :render) state)
+    ((config/get-page-def (:location/page-id (:selected-page state)) :render) state store)
     [:div {:class [:w-full :h-8]}]]])
 
 (defn ^:dev/after-load start []
@@ -136,7 +138,7 @@
    (fn [_ _ _ state]
      (r/render el (make-page state))
      (when-let [post-render-func (config/get-page-def (:location/page-id (:selected-page state)) :post-render)]
-       (post-render-func state))))
+       (post-render-func state store))))
 
   (let [computed-style (.-style (.querySelector js/document ":root"))
         default-colors {:base "#121212"
@@ -150,7 +152,7 @@
   (reset! store {:page-names config/page-names
                  :taskbar-page-select {:active false :mouse-y-start 0}
                  :mouse-pos {:x 0 :y 0}
-                 :selected-page (routing/extract-location js/location.hash)}))
+                 :selected-page (routing/extract-location js/location.hash config/page-names)}))
 
 ; (js/window.addEventListener
 ;      "popstate"
