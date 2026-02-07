@@ -31,7 +31,7 @@
 
    (swap! animated-values assoc-in [id :target] target-value)
 
-   ;; Return the current value as a string so that the Hiccup has the right value
+   ; Return the current value as a string so that the Hiccup has the right value
    (apply-fn (get-in @animated-values [id :current] initial-value))))
 
 (defn get-current

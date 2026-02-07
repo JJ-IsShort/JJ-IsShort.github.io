@@ -13,3 +13,9 @@
             {:location/page-id proper-name
              :location/path args}
             {:location/page-id (nth page-names 0)})))))
+
+(defn jump-to [address page-names store]
+  (.pushState js/history "" "" address)
+  (swap! store assoc :selected-page (extract-location
+                                     address
+                                     page-names)))

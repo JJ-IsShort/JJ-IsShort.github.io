@@ -15,7 +15,7 @@
         :output-dir "public/assets/app/js"
         :asset-path "/assets/app/js"
         ;:cache-blockers #{uncached}
-        :build-hooks [(build-hooks/generate-project-index)]
+        ; :build-hooks [(build-hooks/generate-project-index)]
         :modules {:main {:entries [main]}}}}
  :dev-http {8080 {:root "public"}}}
 

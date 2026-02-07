@@ -183,8 +183,6 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
 
 (defn shader-canvas-hiccup
   "Returns hiccup for a shader canvas element"
-  [id width height]
+  [id style]
   [:canvas {:id id
-            :width width
-            :height height
-            :style {:border "1px solid #ccc"}}])
+            :class style}])
