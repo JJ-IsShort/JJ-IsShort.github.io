@@ -6,7 +6,7 @@
   (:require [routing])
   (:require [config]))
 
-(def mouse-pos {:x 0 :y 0})
+(def mouse-pos (atom {:x 0 :y 0}))
 (defonce el (js/document.getElementById "app"))
 (defonce store (atom {}))
 
@@ -34,13 +34,15 @@
                               (.preventDefault e)
                               (.pushState js/history "" "" (str "#/" page-name "/"))
                               (swap! store assoc :selected-page (routing/extract-location
-                                                                 (str "#/" page-name "/")))))
+                                                                 (str "#/" page-name "/")
+                                                                 config/page-names))))
          (swap! store assoc-in [:taskbar-page-select :active] false))))
 
 (defn make-page [state]
-  [:div.min-h-screen
-   [:div {:class [:fixed :inset-0 :overflow-hidden]}
-    [:div {:class ["w-[calc(100%_-_var(--spacing)_*_4)]" :border-3 (styling/color-tag "border" :highlight) :h-16 :m-2 (styling/color-tag "bg" :base) :absolute :flex]}
+  [:div {:class [:min-h-screen]}
+   [:div {:class [:fixed :inset-0 :overflow-hidden :pointer-events-none :z-50]}
+    [:div {:class ["w-[calc(100%_-_var(--spacing)_*_4)]" :border-3 (styling/color-tag "border" :highlight)
+                   :h-16 :m-2 (styling/color-tag "bg" :base) :absolute :flex "z-50" :pointer-events-auto]}
      [:div {:class ["basis-1/3"]}] ; Left bar section
      [:div {:class ["basis-1/3"]}] ; Centre bar section
      [:div {:class ["basis-1/3"]} ; Right bar section
@@ -124,17 +126,50 @@
              [:div {:class [:ml-2 :w-full :h-fit]}
               [:div {:class [:text-lg :font-black]}
                page-name]]]))]]]]]
-   [:div {:class [:w-full :min-h-screen (styling/color-tag "bg" :base)]}
-    [:div {:class [:w-full :h-20]}]
-    [:div {:class [:w-full :h-8]}]
-    ((some #(get % (keyword (s/replace (:location/page-id (:selected-page state)) #" " "_"))) config/site-definition) state)
+   [:div {:class [:w-full :min-h-screen :pointer-events-none]}
+    [:div {:class [:w-full :h-full (styling/color-tag "bg" :base) "-z-50" :fixed]}]
+    [:div {:class [:w-full :h-20 :pointer-events-none]}]
+    [:div {:class [:w-full :h-8 :pointer-events-none]}]
+    [:div {:class [:pointer-events-auto]}
+     ((config/get-page-def (:location/page-id (:selected-page state)) :render) state store)]
     [:div {:class [:w-full :h-8]}]]])
+
+(defn mouse-update [state]
+  (animation/animatable :pageNamePanel-Dial-Rot 0
+                        (if (:active (:taskbar-page-select @store))
+                          (page-name-rotation (:mouse-y-start (:taskbar-page-select @store)) (:y state) 0 (:active (:taskbar-page-select @store)))
+                          0)
+                        0.9 #(str % "deg") "pageNamePanel-Dial"
+                        (fn [el val] (set! (.-rotate (.-style el)) val)))
+  (animation/animatable :pageNamePanel-First-Rot 0
+                        (if (:active (:taskbar-page-select @store))
+                          (page-name-rotation (:mouse-y-start (:taskbar-page-select @store)) (:y state) 0 (:active (:taskbar-page-select @store)))
+                          0)
+                        0.9 #(str % "deg") "pageNamePanel-First"
+                        (fn [el val] (set! (.-rotate (.-style el)) val)))
+  (doseq [[i page-name] (map-indexed vector (:page-names @store))]
+    (let [id (str "pageNamePanel-" (hash i))]
+      (animation/animatable (keyword (str id "-Rot")) -90
+                            (page-name-rotation (:mouse-y-start (:taskbar-page-select @store)) (:y state) (inc i) (:active (:taskbar-page-select @store)))
+                            0.9 #(str % "deg") id
+                            (fn [el val] (set! (.-rotate (.-style el)) val)))
+      (animation/animatable (keyword (str id "-Scale")) -90
+                            (if (< (abs (animation/get-current (keyword (str id "-Rot")))) 8) 1.2 1)
+                            0.8 #(str %) id
+                            (fn [el val] (set! (.-scale (.-style el)) val))))))
 
 (defn ^:dev/after-load start []
   (add-watch
    store ::render
    (fn [_ _ _ state]
-     (r/render el (make-page state))))
+     (r/render el (make-page state))
+     (when-let [post-render-func (config/get-page-def (:location/page-id (:selected-page state)) :post-render)]
+       (post-render-func state store))))
+  (add-watch
+   mouse-pos ::render
+   (fn [_ _ _ state]
+     (mouse-update state)))
+
   (let [computed-style (.-style (.querySelector js/document ":root"))
         default-colors {:base "#121212"
                         :text "#f1f1f1"
@@ -146,8 +181,8 @@
   ;; Trigger the initial render
   (reset! store {:page-names config/page-names
                  :taskbar-page-select {:active false :mouse-y-start 0}
-                 :mouse-pos {:x 0 :y 0}
-                 :selected-page (routing/extract-location (config/ins js/location.hash))}))
+                 :selected-page (routing/extract-location js/location.hash config/page-names)})
+  (reset! mouse-pos {:x 0 :y 0}))
 
 ; (js/window.addEventListener
 ;      "popstate"
@@ -157,5 +192,5 @@
 
 (start)
 
-(js/addEventListener "mousemove" (fn [e] (set! mouse-pos {:x (.-x e) :y (.-y e)})
-                                   (swap! store assoc :mouse-pos {:x (.-x e) :y (.-y e)})) el)
+(js/addEventListener "mousemove" (fn [e] ; (set! mouse-pos {:x (.-x e) :y (.-y e)})
+                                   (reset! mouse-pos {:x (.-x e) :y (.-y e)})) el)
