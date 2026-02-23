@@ -1,6 +1,7 @@
 (ns structure-editor
   (:require
-   [styling]))
+   [styling]
+   [clojure.string :as s]))
 
 (set! *warn-on-infer* false)
 
@@ -214,6 +215,7 @@
       (let [key (.-key e)
             ctrl? (.-ctrlKey e)
             meta? (.-metaKey e)
+            shift? (.-shiftKey e)
             path (get-in @editors-state [:editor-state active-id :current-editing])
             path-to (vec (drop-last path))
             current-selected (seq-get-in (get-in @editors-state [:editor-state active-id :current-data]) (drop-last path))
@@ -233,7 +235,8 @@
                              (if probable-prev probable-prev (last sorted-keys))))]
 
         (if (get-in @editors-state [:appending :appending?])
-          (let [append-index (last path)
+          (let [key-lower (s/lower-case key)
+                append-index (if (and (not (map? current-selected)) shift?) (inc (last path)) (last path))
                 append (fn [obj]
                          (swap! editors-state seq-assoc-in (into [:editor-state active-id :current-data] path-to)
                                 (cond
@@ -250,26 +253,29 @@
                          ((get-in @editors-state [:editor-state active-id :edited-callback])))]
             (cond
               ; Appending mode
-              (= key "s")
+              (= key-lower "s")
               (append "New String")
 
-              (= key "n")
+              (= key-lower "n")
               (append 0)
 
-              (= key "v")
+              (= key-lower "v")
               (append [])
 
-              (= key "l")
+              (= key-lower "l")
               (append `(Dont_Delete))
 
-              (= key "m")
+              (= key-lower "m")
               (append {})
 
-              (= key "k")
-              (append :New_Key)
+              (= key-lower "k")
+              (append :New_key-lower)
 
-              (= key "y")
+              (= key-lower "y")
               (append `New_Symbol)
+
+              (= key-lower "shift")
+              nil
 
               :else
               (do (swap! editors-state update-in [:appending] assoc
