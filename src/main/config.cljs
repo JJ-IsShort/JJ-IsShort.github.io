@@ -61,8 +61,8 @@
                :post-render (fn [state store]
                               (when-let [page-args (:location/path (:selected-page state))]
                                 (when-let [project-page (first (filter #(= (:id %) (keyword page-args)) project-pages))]
-                                  ((:post-render (:callbacks project-page)) state store))))}}
-   {:Project_Pages {:render (fn [state store] [:div {:class [:flex :justify-center]}])}}])
+                                  ((:post-render (:callbacks project-page)) state store))))}}])
+   ;{:Project_Pages {:render (fn [state store] [:div {:class [:flex :justify-center]}])}}])
            ;:post-render (fn [state store] (graphics/create-shader-canvas "canvas-1" "vec3(y, x, f32(u32(y * uniforms.resolution_y) ^ u32(x * uniforms.resolution_x)))" {:width 256 :height 256}))}}])
 
 (def page-names (doall (for [page config/site-definition] (s/replace (name (nth (keys page) 0))

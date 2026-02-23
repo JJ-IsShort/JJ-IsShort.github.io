@@ -9,27 +9,43 @@
   {:random-range (fn [min max] (+ min (* (rand) (- max min))))
    :variable (fn [name] (str name))})
 
+; (def test-grammar
+;   {:Start [[1.0 `((raw "vec3<f32>(") G (raw ",") G (raw ",") G (raw ")"))]]
+;    :G [[0.5 `(+ {:primitive :variable :args ["x"]} G)]
+;        [0.25 `(+ G G)]
+;        [0.25 `(* G G)]
+;        [0.25 `(/ G G)]
+;        [0.25 `(/ 1 G)]
+;        [0.5 `(abs G)]
+;        [0.5 `(* {:primitive :variable :args ["x"]} G)]
+;        [0.5 `(* {:primitive :variable :args ["y"]} G)]
+;        [0.25 `(sin (/ G 100000))]
+;        [0.5 `((raw "length(coord-vec2(") Term (raw ",") Term (raw "))"))]
+;        [0.75 `((raw "(floor(") G (raw "*8)/8)"))]]
+;    :Term [[0.5 {:primitive :random-range :args [-1 1]}]
+;           [0.25 `(* (+ {:primitive :variable :args ["x"]} {:primitive :random-range :args [-1 1]}) 10)]
+;           [0.25 `(* (+ {:primitive :variable :args ["y"]} {:primitive :random-range :args [-1 1]}) 10)]
+;           [0.25 {:primitive :random-range :args [-5 5]}]
+;           [0.25 `(sin (/ (+ {:primitive :variable :args ["time"]} {:primitive :random-range :args [-3.1415 3.1415]}) {:primitive :random-range :args [0.25 10]}))]
+;           [0.5 `((raw "(floor(") {:primitive :variable :args ["x"]} (raw "*8)/8)"))]
+;           [0.5 `((raw "(floor(") {:primitive :variable :args ["y"]} (raw "*8)/8)"))]
+;           [0.5 `((raw "(floor(") (+ (sin {:primitive :variable :args ["time/8"]}) 1) (raw "*16)/16*4)"))]]})
+
 (def test-grammar
   {:Start [[1.0 `((raw "vec3<f32>(") G (raw ",") G (raw ",") G (raw ")"))]]
    :G [[0.5 `(+ {:primitive :variable :args ["x"]} G)]
+       [0.5 `(+ {:primitive :variable :args ["y"]} G)]
        [0.25 `(+ G G)]
        [0.25 `(* G G)]
        [0.25 `(/ G G)]
        [0.25 `(/ 1 G)]
+       [0.5 `((raw "f32(y<(x*") G (raw "+") G (raw "))"))]
        [0.5 `(abs G)]
-       [0.5 `(* {:primitive :variable :args ["x"]} G)]
-       [0.5 `(* {:primitive :variable :args ["y"]} G)]
-       [0.25 `(sin (/ G 100000))]
-       [0.5 `((raw "length(coord-vec2(") Term (raw ",") Term (raw "))"))]
-       [0.75 `((raw "(floor(") G (raw "*8)/8)"))]]
+       [0.25 `(sin (/ G 100))]]
    :Term [[0.5 {:primitive :random-range :args [-1 1]}]
-          [0.25 `(* (+ {:primitive :variable :args ["x"]} {:primitive :random-range :args [-1 1]}) 10)]
-          [0.25 `(* (+ {:primitive :variable :args ["y"]} {:primitive :random-range :args [-1 1]}) 10)]
-          [0.25 {:primitive :random-range :args [-5 5]}]
-          [0.25 `(sin (/ (+ {:primitive :variable :args ["time"]} {:primitive :random-range :args [-3.1415 3.1415]}) {:primitive :random-range :args [0.25 10]}))]
-          [0.5 `((raw "(floor(") {:primitive :variable :args ["x"]} (raw "*8)/8)"))]
-          [0.5 `((raw "(floor(") {:primitive :variable :args ["y"]} (raw "*8)/8)"))]
-          [0.5 `((raw "(floor(") (+ (sin {:primitive :variable :args ["time/8"]}) 1) (raw "*16)/16*4)"))]]})
+          [0.25 `(* (+ {:primitive :variable :args ["x"]} {:primitive :random-range :args [-1 1]}) 1)]
+          [0.25 `(* (+ {:primitive :variable :args ["y"]} {:primitive :random-range :args [-1 1]}) 1)]
+          [0.25 `(sin (/ (+ {:primitive :variable :args ["time"]} {:primitive :random-range :args [-3.1415 3.1415]}) {:primitive :random-range :args [0.25 10]}))]]})
 
 (def language-dictionary
   {:+ #(str "(" %1 "+" %2 ")")
@@ -117,7 +133,7 @@
                                (utils/panel "Basic RandomArt"
                                             [[[:div {:class [:flex :flex-row]}
                                                [:div {:class [:h-100 :w-150 :p-2]}
-                                                (structure-editor/editor nil "editor-basic" test-grammar)]
+                                                (structure-editor/editor #(swap! store assoc :page-names (:page-names state)) "editor-basic" test-grammar)]
                                                [:div {:replicant/on-mount
                                                       #(graphics/create-shader-canvas "Basic RandomArt Canvas" "vec3(x*y)" {:width 100 :height 100})
                                                       :class [:size-100 :p-2 :pl-2]}
@@ -128,6 +144,14 @@
                                                        :on {:click #(let [controls (graphics/get-canvas-controls "Basic RandomArt Canvas")]
                                                                       ((:set-shader! controls)
                                                                        (sexpr->shader (generate test-grammar builtin-primitives `Start {:max-depth 35}))))}}
-                                                 "Generate"]]]]])))
+                                                 "Generate"]]]]])
+                               (utils/panel "Help"
+                                            [[(into [:div {:class [:w-222]}]
+                                                    (utils/text->divs
+                                                     "Here is a list of the builtin language features in the CFG language:
+                                                 
+                                                      +, -, *, / - These map to the classic math operations. Only two arguments are allowed.
+                                                      sin, cos, abs - Single argument functions.
+                                                      raw - The first argument should be a string. This node just pastes the first argument into the shader."))]])))
     :post-render (fn [state store])}})
 
