@@ -1,6 +1,7 @@
 (ns structure-editor
   (:require
-   [styling]))
+   [styling]
+   [clojure.string :as s]))
 
 (set! *warn-on-infer* false)
 
@@ -118,6 +119,7 @@
         initial (cond
                   (keyword? current) (name current)
                   (string? current)  current
+                  (symbol? current)  (name current)
                   :else              (pr-str current))]
     (when-not (or (seq? current) (vector? current) (map? current))
       (swap! editors-state update-in [:editing] assoc
@@ -173,6 +175,13 @@
                :insert-index 0))))
   ((get-in @editors-state [:editor-state id :edited-callback])))
 
+(defn enter-append-mode! [id]
+  (let [path    (get-in @editors-state [:editor-state id :current-editing])
+        current (seq-get-in (get-in @editors-state [:editor-state id :current-data]) path)]
+    (swap! editors-state update-in [:appending] assoc
+           :appending? true))
+  ((get-in @editors-state [:editor-state id :edited-callback])))
+
 (defn str-insert
   [s sub i]
   (str (subs s 0 i) sub (subs s i)))
@@ -206,6 +215,7 @@
       (let [key (.-key e)
             ctrl? (.-ctrlKey e)
             meta? (.-metaKey e)
+            shift? (.-shiftKey e)
             path (get-in @editors-state [:editor-state active-id :current-editing])
             path-to (vec (drop-last path))
             current-selected (seq-get-in (get-in @editors-state [:editor-state active-id :current-data]) (drop-last path))
@@ -224,90 +234,147 @@
                                                     last)]
                              (if probable-prev probable-prev (last sorted-keys))))]
 
-        (if (get-in @editors-state [:editing :editing?])
-          (cond
-             ; Editing mode
-            (= key "Enter") (commit-edit! active-id)
-            (= key "Escape")  (abort-edit! active-id)
-            (= key "Backspace")
-            (do (swap! editors-state update-in [:editing :edit-buffer]
-                       #(remove-char-at % (dec (get-in @editors-state [:editing :insert-index]))))
-                (swap! editors-state update-in [:editing :insert-index] #(max 0 (dec %)))
-                ((get-in @editors-state [:editor-state active-id :edited-callback])))
-            (= key "ArrowRight")
-            (do (swap! editors-state update-in [:editing :insert-index] #(min (count (get-in @editors-state [:editing :edit-buffer])) (inc %)))
-                ((get-in @editors-state [:editor-state active-id :edited-callback])))
-            (= key "ArrowLeft")
-            (do (swap! editors-state update-in [:editing :insert-index] #(max 0 (dec %)))
-                ((get-in @editors-state [:editor-state active-id :edited-callback])))
-            (= (count key) 1)
-            (do (swap! editors-state update-in [:editing :edit-buffer] str-insert key (get-in @editors-state [:editing :insert-index]))
-                (swap! editors-state update-in [:editing :insert-index] #(min (count (get-in @editors-state [:editing :edit-buffer])) (inc %)))
-                ((get-in @editors-state [:editor-state active-id :edited-callback]))))
-          (cond
-            (= key "Escape")
-            (deactivate-editor!)
+        (if (get-in @editors-state [:appending :appending?])
+          (let [key-lower (s/lower-case key)
+                append-index (if (and (not (map? current-selected)) shift?) (inc (last path)) (last path))
+                append (fn [obj]
+                         (swap! editors-state seq-assoc-in (into [:editor-state active-id :current-data] path-to)
+                                (cond
+                                  (vector? current-selected)
+                                  (vec (concat (subvec current-selected 0 append-index) [obj] (subvec current-selected append-index)))
 
-            (= key "ArrowRight")
-            (do
-              (cond
-                (or (seq? current-selected) (vector? current-selected))
-                (swap! editors-state assoc-in [:editor-state active-id :current-editing] (conj path-to (mod (+ selected-index 1) (count current-selected))))
+                                  (seq? current-selected)
+                                  (seq (concat (take append-index current-selected) [obj] (drop append-index current-selected)))
 
-                (map? current-selected)
-                (swap! editors-state assoc-in [:editor-state active-id :current-editing] (conj path-to (next-key current-selected selected-index)))
+                                  (map? current-selected)
+                                  (assoc current-selected :New_Key obj)))
+                         (swap! editors-state update-in [:appending] assoc
+                                :appending? false)
+                         ((get-in @editors-state [:editor-state active-id :edited-callback])))]
+            (cond
+              ; Appending mode
+              (= key-lower "s")
+              (append "New String")
 
-                :else
-                (println current-selected (type current-selected)))
-              ((get-in @editors-state [:editor-state active-id :edited-callback])))
+              (= key-lower "n")
+              (append 0)
 
-            (= key "ArrowLeft")
-            (do
-              (cond
-                (or (seq? current-selected) (vector? current-selected))
-                (swap! editors-state assoc-in [:editor-state active-id :current-editing] (conj path-to (mod (+ (- selected-index 1) (count current-selected)) (count current-selected))))
+              (= key-lower "v")
+              (append [])
 
-                (map? current-selected)
-                (swap! editors-state assoc-in [:editor-state active-id :current-editing] (conj path-to (previous-key current-selected selected-index)))
+              (= key-lower "l")
+              (append `(Dont_Delete))
 
-                :else
-                (println current-selected (type current-selected)))
-              ((get-in @editors-state [:editor-state active-id :edited-callback])))
+              (= key-lower "m")
+              (append {})
 
-            (= key "ArrowDown")
-            (do (let [target-expr (if (associative? current-selected) (get current-selected selected-index) (nth current-selected selected-index))]
-                  (cond
-                    (or (seq? target-expr) (vector? target-expr))
-                    (swap! editors-state assoc-in [:editor-state active-id :current-editing] (conj path 0))
+              (= key-lower "k")
+              (append :New_key-lower)
 
-                    (map? target-expr)
-                    (swap! editors-state assoc-in [:editor-state active-id :current-editing] (conj path (first (sort (keys target-expr)))))
+              (= key-lower "y")
+              (append `New_Symbol)
 
-                    :else
-                    (println target-expr (type target-expr))))
-                ((get-in @editors-state [:editor-state active-id :edited-callback])))
+              (= key-lower "shift")
+              nil
 
-            (= key "ArrowUp")
-            (when (> (count (drop-last path)) 0)
-              (do (swap! editors-state assoc-in [:editor-state active-id :current-editing] (vec (drop-last path)))
-
+              :else
+              (do (swap! editors-state update-in [:appending] assoc
+                         :appending? false)
+                  ((get-in @editors-state [:editor-state active-id :edited-callback])))))
+          (if (get-in @editors-state [:editing :editing?])
+            (cond
+              ; Editing mode
+              (= key "Enter") (commit-edit! active-id)
+              (= key "Escape")  (abort-edit! active-id)
+              (= key "Backspace")
+              (do (swap! editors-state update-in [:editing :edit-buffer]
+                         #(remove-char-at % (dec (get-in @editors-state [:editing :insert-index]))))
+                  (swap! editors-state update-in [:editing :insert-index] #(max 0 (dec %)))
+                  ((get-in @editors-state [:editor-state active-id :edited-callback])))
+              (= key "ArrowRight")
+              (do (swap! editors-state update-in [:editing :insert-index] #(min (count (get-in @editors-state [:editing :edit-buffer])) (inc %)))
+                  ((get-in @editors-state [:editor-state active-id :edited-callback])))
+              (= key "ArrowLeft")
+              (do (swap! editors-state update-in [:editing :insert-index] #(max 0 (dec %)))
+                  ((get-in @editors-state [:editor-state active-id :edited-callback])))
+              (= (count key) 1)
+              (do (swap! editors-state update-in [:editing :edit-buffer] str-insert key (get-in @editors-state [:editing :insert-index]))
+                  (swap! editors-state update-in [:editing :insert-index] #(min (count (get-in @editors-state [:editing :edit-buffer])) (inc %)))
                   ((get-in @editors-state [:editor-state active-id :edited-callback]))))
 
-            (and (= key "d") ctrl?)
-            (update-structure!
-             active-id
-             (fn [id structure]
-               (swap! editors-state seq-assoc-in (into [:editor-state active-id :current-data] (drop-last path))
-                      (remove-nth current-selected selected-index))
-               (swap! editors-state assoc-in [:editor-state active-id :current-editing] (vec (drop-last path)))
-               ((get-in @editors-state [:editor-state active-id :edited-callback]))))
+            (cond
+              (= key "Escape")
+              (deactivate-editor!)
 
-            (and (= key "e") ctrl?)
-            (enter-edit-mode! active-id)
+              (= key "ArrowRight")
+              (do
+                (cond
+                  (or (seq? current-selected) (vector? current-selected))
+                  (swap! editors-state assoc-in [:editor-state active-id :current-editing] (conj path-to (mod (inc selected-index) (count current-selected))))
 
-            (and (= key "r") ctrl?)
-            (when (selected-is-map-key? active-id)
-              (enter-key-rename-mode! active-id))))))))
+                  (map? current-selected)
+                  (swap! editors-state assoc-in [:editor-state active-id :current-editing] (conj path-to (next-key current-selected selected-index)))
+
+                  :else
+                  (println current-selected (type current-selected)))
+                ((get-in @editors-state [:editor-state active-id :edited-callback])))
+
+              (= key "ArrowLeft")
+              (do
+                (cond
+                  (or (seq? current-selected) (vector? current-selected))
+                  (swap! editors-state assoc-in [:editor-state active-id :current-editing] (conj path-to (mod (+ (- selected-index 1) (count current-selected)) (count current-selected))))
+
+                  (map? current-selected)
+                  (swap! editors-state assoc-in [:editor-state active-id :current-editing] (conj path-to (previous-key current-selected selected-index)))
+
+                  :else
+                  (println current-selected (type current-selected)))
+                ((get-in @editors-state [:editor-state active-id :edited-callback])))
+
+              (= key "ArrowDown")
+              (do (let [target-expr (if (associative? current-selected) (get current-selected selected-index) (nth current-selected selected-index))]
+                    (cond
+                      (or (seq? target-expr) (vector? target-expr))
+                      (swap! editors-state assoc-in [:editor-state active-id :current-editing] (conj path 0))
+
+                      (map? target-expr)
+                      (swap! editors-state assoc-in [:editor-state active-id :current-editing] (conj path (first (sort (keys target-expr)))))
+
+                      :else
+                      (println target-expr (type target-expr))))
+                  ((get-in @editors-state [:editor-state active-id :edited-callback])))
+
+              (= key "ArrowUp")
+              (when (> (count (drop-last path)) 0)
+                (do (swap! editors-state assoc-in [:editor-state active-id :current-editing] (vec (drop-last path)))
+                    ((get-in @editors-state [:editor-state active-id :edited-callback]))))
+
+              (and (= key "d") ctrl?)
+              (update-structure!
+               active-id
+               (fn [id structure]
+                 (swap! editors-state seq-assoc-in (into [:editor-state active-id :current-data] (drop-last path))
+                        (remove-nth current-selected selected-index))
+                 (swap! editors-state assoc-in [:editor-state active-id :current-editing]
+                        (if (> (count (drop-last path)) 0) (vec (drop-last path))
+                            [(cond
+                               (map? current-selected)
+                               (first (sort (keys current-selected)))
+
+                               (or (seq? current-selected) (vector? current-selected))
+                               0)]))))
+                 ; ((get-in @editors-state [:editor-state active-id :edited-callback]))))
+
+              (and (= key "e") ctrl?)
+              (enter-edit-mode! active-id)
+
+              (and (= key "r") ctrl?)
+              (when (selected-is-map-key? active-id)
+                (enter-key-rename-mode! active-id))
+
+              (and (= key "a") ctrl?)
+              (enter-append-mode! active-id))))))))
 
         ; (cond
         ;   (= mode "nav")
@@ -465,12 +532,14 @@
    [:pre {:class [:overflow-hidden :w-full "h-[calc(100%-9*var(--spacing))]"]}
     (render-structure (get-in @editors-state [:editor-state (keyword id) :current-data]); [:test {:test [:other "test" {:hey `lets :make "this" :way `(more [complicated okay ?])}]}]
                       [] 0 (get-in @editors-state [:editor-state (keyword id) :current-editing]))]
-   [:div {:class [:w-full :h-8 :border-2 :border-dashed "border-[#f1f1f1]" "bg-[#121212]" :mt-1 :flex :flex-row]}
-    (if (get-in @editors-state [:editing :editing?])
-      (list
-       [:div {:class [:h-full "w-2" :bg-green-400]}]
-       [:div {:class ["w-[calc(100%_-_var(--spacing)*(2+20))]"]}]
-       [:div {:class [:text-center :flex :h-full :items-center :mr-2]}
-        [:div {:class [:h-fit "text-[#f1f1f1]"]} (get-in @editors-state [:editing :edit-buffer])]])
-      (list
-       [:div {:class [:h-full "w-2" :bg-blue-300]}]))]])
+   [:div {:class [:w-full :h-8 :border-1 :border-dashed "border-[#f1f1f1]" "bg-[#121212]" :mt-1 :flex :flex-row]}
+    (if (get-in @editors-state [:appending :appending?])
+      [:div {:class [:h-full "w-2" :bg-red-300]}]
+      (if (get-in @editors-state [:editing :editing?])
+        (list
+         [:div {:class [:h-full "w-2" :bg-green-400]}]
+         [:div {:class ["w-[calc(100%_-_var(--spacing)*(2+20))]"]}]
+         [:div {:class [:text-center :flex :h-full :items-center :mr-2]}
+          [:div {:class [:h-fit "text-[#f1f1f1]"]} (get-in @editors-state [:editing :edit-buffer])]])
+        (list
+         [:div {:class [:h-full "w-2" :bg-blue-300]}])))]])
