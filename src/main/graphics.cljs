@@ -4,7 +4,7 @@
 
 (defn create-shader-pipeline
   "Creates a WebGPU render pipeline with the given shader code"
-  [device shader-code]
+  [^js device shader-code]
   (let [shader-module (.createShaderModule device
                                            #js {:code shader-code})
         ; pipeline-layout (.createPipelineLayout device
@@ -22,7 +22,7 @@
 
 (defn create-uniform-buffer
   "Creates a buffer for uniforms"
-  [device size]
+  [^js device size]
   (.createBuffer device
                  #js {:size size
                       :usage (bit-or js/GPUBufferUsage.UNIFORM
@@ -30,7 +30,7 @@
 
 (defn create-bind-group
   "Creates a bind group for uniforms"
-  [device pipeline buffer]
+  [^js device ^js pipeline ^js buffer]
   (let [layout (.getBindGroupLayout pipeline 0)]
     (.createBindGroup device
                       #js {:layout layout
@@ -39,13 +39,13 @@
 
 (defn update-uniforms
   "Updates uniform buffer with new values"
-  [device buffer uniforms]
+  [^js device ^js buffer uniforms]
   (let [data (js/Float32Array. (js/Object.values (clj->js uniforms)))]
     (.writeBuffer (.-queue device) buffer 0 data)))
 
 (defn render-frame
   "Renders a single frame"
-  [device context pipeline uniform-buffer]
+  [^js device ^js context ^js pipeline ^js uniform-buffer]
   (let [command-encoder (.createCommandEncoder device)
         texture-view (.getCurrentTexture context)
         render-pass (.beginRenderPass command-encoder
@@ -131,9 +131,9 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
 
       ;; Initialize WebGPU
       (-> (js/navigator.gpu.requestAdapter)
-          (.then (fn [adapter]
+          (.then (fn [^js adapter]
                    (.requestDevice adapter)))
-          (.then (fn [device]
+          (.then (fn [^js device]
                    (let [canvas (.getElementById js/document canvas-id)
                          context (.getContext canvas "webgpu")
                          format "bgra8unorm"]
