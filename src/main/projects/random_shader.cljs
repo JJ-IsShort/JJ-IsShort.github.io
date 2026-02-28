@@ -143,7 +143,7 @@
                                                 [:div {:class [:margin-auto :h-full :text-center (styling/color-tag "border" :text) :border-2]
                                                        :on {:click #(let [controls (graphics/get-canvas-controls "Basic RandomArt Canvas")]
                                                                       ((:set-shader! controls)
-                                                                       (sexpr->shader (generate test-grammar builtin-primitives `Start {:max-depth 35}))))}}
+                                                                       (sexpr->shader (generate (structure-editor/get-structure "editor-basic") builtin-primitives `Start {:max-depth 35}))))}}
                                                  "Generate"]]]]])
                                (utils/panel "Help"
                                             [[(into [:div {:class [:w-222]}]
@@ -152,6 +152,21 @@
                                                  
                                                       +, -, *, / - These map to the classic math operations. Only two arguments are allowed.
                                                       sin, cos, abs - Single argument functions.
-                                                      raw - The first argument should be a string. This node just pastes the first argument into the shader."))]])))
+                                                      raw - The first argument should be a string. This node just pastes the first argument into the shader.
+                                                     
+                                                    There are also primitive functions built into the language:
+                                                     
+                                                     :variable - Takes one argument. A string that refers to a variable that is provided to the shader. Variables are x, y, and time.
+                                                     :random-range - Generates a random number within the two numeric arguments.
+                                                    
+                                                    Use Ctrl+A to append to a structural element in the editor. When in append mode, Shift+ any of the following adds after. Otherwise, the key adds before:
+                                                     
+                                                     s - String
+                                                     n - Number
+                                                     v - Vector
+                                                     l - List (Warning: don't delete the last element in the list. First add what you want, then delete Dont_Delete)
+                                                     m - Map
+                                                     k - Keyword
+                                                     y - Symbol"))]])))
     :post-render (fn [state store])}})
 

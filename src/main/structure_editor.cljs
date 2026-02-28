@@ -269,7 +269,7 @@
               (append {})
 
               (= key-lower "k")
-              (append :New_key-lower)
+              (append :New_Key)
 
               (= key-lower "y")
               (append `New_Symbol)
