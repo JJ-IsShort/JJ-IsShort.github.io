@@ -1,6 +1,7 @@
 (ns main
   (:require [replicant.dom :as r]
             [clojure.string :as s])
+  (:import [goog.net Cookies])
   (:require [animation]
             [styling])
   (:require [routing])
@@ -9,6 +10,7 @@
 (def mouse-pos (atom {:x 0 :y 0}))
 (defonce el (js/document.getElementById "app"))
 (defonce store (atom {}))
+(def cookies (Cookies. js/document))
 
 (defn page-name-rotation [mouse-y-start mouse-y-current i hidden]
   (if hidden
@@ -38,15 +40,78 @@
                                                                  config/page-names))))
          (swap! store assoc-in [:taskbar-page-select :active] false))))
 
+; yoinked from https://github.com/reagent-project/reagent-utils/blob/master/src/reagent/cookies.cljs
+(defn set-cookie!
+  "sets a cookie, the max-age for session cookie
+   following optional parameters may be passed in as a map:
+   :max-age - defaults to -1
+   :path - path of the cookie, defaults to the full request path
+   :domain - domain of the cookie, when null the browser will use the full request host name
+   :raw? - format or store raw string
+   :secure - to store securely
+  "
+  [k content & [{:keys [max-age path domain raw? secure] :or {max-age -1 path "/" domain nil raw? true secure true} :as opts}]]
+  (let [k (name k)
+        content (if raw?
+                  (str content)
+                  (pr-str content))]
+    (cond
+      (empty? (dissoc opts :raw?))
+      (.set cookies k content)
+
+      :else
+      (.set cookies k content max-age path domain secure))))
+
+(defn get-cookie [name default-val]
+  (if-let [val (.get cookies name)]
+    val
+    default-val))
+
+(defn settings_bar [state]
+  (let [opened (get-in state [:settings-opened] false)]
+    [:div {:class [:transition-transform
+                   :mt-20 :pointer-events-auto
+                   :w-80 :z-50
+                   (when (not opened) :-translate-x-80)
+                   :h-full]}
+     [:div {:class ["w-[calc(100%-3*var(--spacing)*2)]" :h-full :m-3 :flex :justify-center]}
+      [:div {:class [:h-fit-content :w-full]}
+       [:div {:class [:relative]}
+        [:div {:class [:w-full :h-fit
+                       (styling/color-tag "border" :highlight) :border-3
+                       (styling/color-tag "bg" :base) :px-3 :py-1 :my-1
+                       :rounded-tr-lg :rounded-bl-lg :text-sm]
+               :style {:corner-shape "notch"}}
+         [:div {:class [:grid :grid-cols-3 :gap-4]}
+          (for [[id color] (map-indexed vector styling/color-schemes)]
+            [:div {:class [:h-6 :flex :flex-row]
+                   :on {:click #(do (styling/set_colors id)
+                                    (set-cookie! "selected-color" id))}}
+             [:div {:class [:h-full (str "bg-[" (styling/color color :base) "]") :flex-1
+                            :rounded-bl-lg :rounded-tl-lg]}]
+             [:div {:class [:h-full (str "bg-[" (styling/color color :text) "]") :flex-1]}]
+             [:div {:class [:h-full (str "bg-[" (styling/color color :highlight) "]") :flex-1
+                            :rounded-br-lg :rounded-tr-lg]}]])]]]]]]))
+
 (defn make-page [state]
   [:div {:class [:min-h-screen]}
    [:div {:class [:fixed :inset-0 :overflow-hidden :pointer-events-none :z-50]}
     [:div {:class ["w-[calc(100%_-_var(--spacing)_*_4)]" :border-3 (styling/color-tag "border" :highlight)
                    :h-16 :m-2 (styling/color-tag "bg" :base) :absolute :flex "z-50" :pointer-events-auto]}
-     [:div {:class ["basis-1/3"]}] ; Left bar section
+     [:div {:class ["basis-1/3"]} ; Left bar section
+      [:div {:class ["my-[5px]" "h-[calc(100%-5px*2)]" "ml-[5px]" :rounded-md :relative]}
+       [:span {:class ["material-symbols-outlined"
+                       :h-full
+                       :aspect-square
+                       :block
+                       :cursor-pointer]
+               :style {:color "var(--color-text)"
+                       :font-size "300%"
+                       :line-height 1}
+               :on {:click #(swap! store assoc :settings-opened (not (get-in state [:settings-opened] false)))}} "settings"]]]
      [:div {:class ["basis-1/3"]}] ; Centre bar section
      [:div {:class ["basis-1/3"]} ; Right bar section
-      [:div {:class ["my-[5px]" "h-[calc(100%-5px*2)]" "mr-[5px]" :rounded-md :relative]
+      [:div {:class ["my-[5px]" "h-[calc(100%-5px*2)]" "mr-[5px]" :rounded-md :relative :cursor-pointer]
              :id "pageNameParent"
              :on (when-not (:active (:taskbar-page-select state))
                    {:click #_{:clj-kondo/ignore [:unused-binding]}
@@ -125,7 +190,8 @@
                                                             (fn [el val] (set! (.-translate (.-style el)) val)))}}
              [:div {:class [:ml-2 :w-full :h-fit]}
               [:div {:class [:text-lg :font-black]}
-               page-name]]]))]]]]]
+               page-name]]]))]]]]
+    (settings_bar state)]
    [:div {:class [:w-full :min-h-screen :pointer-events-none]}
     [:div {:class [:w-full :h-full (styling/color-tag "bg" :base) "-z-50" :fixed]}]
     [:div {:class [:w-full :h-20 :pointer-events-none]}]
@@ -170,13 +236,7 @@
    (fn [_ _ _ state]
      (mouse-update state)))
 
-  (let [computed-style (.-style (.querySelector js/document ":root"))
-        default-colors {:base "#121212"
-                        :text "#f1f1f1"
-                        :highlight "#8540c9"}]
-    (.setProperty computed-style "--color-base" (styling/color default-colors :base))
-    (.setProperty computed-style "--color-text" (styling/color default-colors :text))
-    (.setProperty computed-style "--color-highlight" (styling/color default-colors :highlight)))
+  (styling/set_colors (js/parseInt (get-cookie "selected-color" 0)))
 
   ;; Trigger the initial render
   (reset! store {:page-names config/page-names

@@ -31,21 +31,37 @@
 ;           [0.5 `((raw "(floor(") {:primitive :variable :args ["y"]} (raw "*8)/8)"))]
 ;           [0.5 `((raw "(floor(") (+ (sin {:primitive :variable :args ["time/8"]}) 1) (raw "*16)/16*4)"))]]})
 
+; (def test-grammar
+;   {:Start [[1.0 `((raw "vec3<f32>(") G (raw ",") G (raw ",") G (raw ")"))]]
+;    :G [[0.5 `(+ {:primitive :variable :args ["x"]} G)]
+;        [0.5 `(+ {:primitive :variable :args ["y"]} G)]
+;        [0.25 `(+ G G)]
+;        [0.25 `(* G G)]
+;        [0.25 `(/ G G)]
+;        [0.25 `(/ 1 G)]
+;        [0.5 `((raw "f32(y<(x*") G (raw "+") G (raw "))"))]
+;        [0.5 `(abs G)]
+;        [0.25 `(sin (/ G 100))]]
+;    :Term [[0.5 {:primitive :random-range :args [-1 1]}]
+;           [0.25 `(* (+ {:primitive :variable :args ["x"]} {:primitive :random-range :args [-1 1]}) 1)]
+;           [0.25 `(* (+ {:primitive :variable :args ["y"]} {:primitive :random-range :args [-1 1]}) 1)]
+;           [0.25 `(sin (/ (+ {:primitive :variable :args ["time"]} {:primitive :random-range :args [-3.1415 3.1415]}) {:primitive :random-range :args [0.25 10]}))]]})
+
 (def test-grammar
-  {:Start [[1.0 `((raw "vec3<f32>(") G (raw ",") G (raw ",") G (raw ")"))]]
-   :G [[0.5 `(+ {:primitive :variable :args ["x"]} G)]
-       [0.5 `(+ {:primitive :variable :args ["y"]} G)]
+  {:G [[0.5 `(+ {:args ["x"] :primitive :variable} G)]
+       [0.5 `(+ {:args ["y"] :primitive :variable} G)]
        [0.25 `(+ G G)]
        [0.25 `(* G G)]
        [0.25 `(/ G G)]
        [0.25 `(/ 1 G)]
-       [0.5 `((raw "f32(y<(x*") G (raw "+") G (raw "))"))]
+       [0.75 `((raw "f32(y<(x*") G (raw "+") G (raw "))"))]
        [0.5 `(abs G)]
-       [0.25 `(sin (/ G 100))]]
-   :Term [[0.5 {:primitive :random-range :args [-1 1]}]
-          [0.25 `(* (+ {:primitive :variable :args ["x"]} {:primitive :random-range :args [-1 1]}) 1)]
-          [0.25 `(* (+ {:primitive :variable :args ["y"]} {:primitive :random-range :args [-1 1]}) 1)]
-          [0.25 `(sin (/ (+ {:primitive :variable :args ["time"]} {:primitive :random-range :args [-3.1415 3.1415]}) {:primitive :random-range :args [0.25 10]}))]]})
+       [0.25 `((raw "f32(sin(") G (raw ")>0.5)"))]
+       [0.25 `(sin (/ G 10))]]
+   :Start [[1 `((raw "mix(theme_color_1, theme_color_3, clamp(") G (raw ",0.0,1.0))"))]]
+   :Term [[0.25 `(* (+ {:args ["x"] :primitive :variable} {:args [-1 1] :primitive :random-range}) 1)]
+          [0.25 `(* (+ {:args ["y"] :primitive :variable} {:args [-1 1] :primitive :random-range}) 1)]
+          [100 `(sin (* {:args ["time"] :primitive :variable} {:args [0.5 5] :primitive :random-range}))]]})
 
 (def language-dictionary
   {:+ #(str "(" %1 "+" %2 ")")
@@ -143,7 +159,7 @@
                                                 [:div {:class [:margin-auto :h-full :text-center (styling/color-tag "border" :text) :border-2]
                                                        :on {:click #(let [controls (graphics/get-canvas-controls "Basic RandomArt Canvas")]
                                                                       ((:set-shader! controls)
-                                                                       (sexpr->shader (generate (structure-editor/get-structure "editor-basic") builtin-primitives `Start {:max-depth 35}))))}}
+                                                                       (sexpr->shader (generate (structure-editor/get-structure "editor-basic") builtin-primitives `Start {:max-depth 25}))))}}
                                                  "Generate"]]]]])
                                (utils/panel "Help"
                                             [[(into [:div {:class [:w-222]}]

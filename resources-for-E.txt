@@ -1,0 +1,62 @@
+I use shadow-cljs as the build system. It goes from .cljs files to .js files that can be served using an index.html.
+It does require a bit of configuration. I installed it through npm with `npx create-cljs-project my-project` and here is my build config: https://github.com/JJ-IsShort/JJ-IsShort.github.io/blob/main/shadow-cljs.edn
+
+I can detail it:
+```
+{:source-paths
+ ["src/dev" ; I don't use this directory
+  "src/main" ; This sets up basically the import directory. Any includes in any of the files will search from this directory first
+  "src/test" ; I don't actually use this
+  ".shadow-cljs/generated"] ; Can ignore this line
+
+ :dependencies ; Sets the dependencies. Dataspex and Portfolio I think are a dependency of the others. Replicant is my datastructure to html library
+ [[no.cjohansen/dataspex "2025.10.1"]
+  [no.cjohansen/portfolio "2025.08.29"]
+  [no.cjohansen/replicant "2025.06.21"]]
+
+ :builds ; Defines build targets. I only have one called "app"
+ {:app {:target :browser ; It is intended to be run in a browser and included in an html file
+        :output-dir "public/assets/app/js" ; Where the final compiled js will end up
+        :asset-path "/assets/app/js" ; I kinda forgot what this is for
+        ;:cache-blockers #{uncached} ; This was also part of a failed experiment. Please ignore
+        ; :build-hooks [(build-hooks/generate-project-index)] ; This too
+        :modules {:main {:entries [main]}}}} ; Says which module (second main) in which file (the first main indicating main.cljs) to count as the entrypoint
+ :dev-http {8080 {:root "public"}}} ; Serves a hotreloading page from the "public" directory on port 8080
+```
+
+This is my index.html: https://github.com/JJ-IsShort/JJ-IsShort.github.io/blob/main/public/index.html
+```html
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>JJ | mrow~</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script> // Gives me tailwind use
+    <style type="text/tailwindcss"> // I don't actually use these
+      @theme {
+        --color-dark: #272a2c;
+        --color-light: #d6ccb2;
+        --color-h1: #5b336a;
+        --color-h2: #c24463;
+        --color-h3: #e4b34c;
+        --color-h4: #58b36a;
+        --color-h5: #3170cc;
+      }
+    </style>
+    <style>
+      body {
+        color: var(--color-text);
+        font-family: familySpaceMono, monospace, sans-serif; // Makes my text nice
+      }
+    </style>
+    </style>
+  </head>
+  <body>
+    <div id="app"></div> // I use this as the root of my page
+    <script src="assets/app/js/main.js"></script> // Loads the compiled javascript
+  </body>
+</html>
+```
+
+Again, any questions and you can ask me or check out my github
