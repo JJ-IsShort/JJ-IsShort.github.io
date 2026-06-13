@@ -61,9 +61,54 @@
                :post-render (fn [state store]
                               (when-let [page-args (:location/path (:selected-page state))]
                                 (when-let [project-page (first (filter #(= (:id %) (keyword page-args)) project-pages))]
-                                  ((:post-render (:callbacks project-page)) state store))))}}])
-   ;{:Project_Pages {:render (fn [state store] [:div {:class [:flex :justify-center]}])}}])
-           ;:post-render (fn [state store] (graphics/create-shader-canvas "canvas-1" "vec3(y, x, f32(u32(y * uniforms.resolution_y) ^ u32(x * uniforms.resolution_x)))" {:width 256 :height 256}))}}])
+                                  ((:post-render (:callbacks project-page)) state store))))}}
+   {:Resume {:render
+             (fn [state store]
+               [:div {:class [:flex-row :justify-center]}
+                [:div {:class [:flex :justify-center]}
+                 [:span {:class [:text-4xl :font-bold]} "Jai Steinmetz"]]
+                [:div {:class [:flex :justify-center]}
+                 [:div {:class [:flex-col]}
+                  [:span "jsteinmetz@wpi.edu"]
+                  [:span {:class [:font-bold]} " | "]
+                  [:span "JJ-IsShort"]
+                  [:span {:class [:font-bold]} " | "]
+                  [:span "Worcester, MA"]]]
+                [:div {:class [:flex :justify-center]}
+                 [:div {:class [:flex-col :font-light]}
+                  [:span "Email"]
+                  [:span {:class [:font-bold]} " | "]
+                  [:span "Github"]
+                  [:span {:class [:font-bold]} " | "]
+                  [:span "Home"]]]
+                [:div {:class [:flex :justify-center]}
+                 (let [bullet (fn [depth content]
+                                [:div {:class [:flex-row :flex]}
+                                 [:pre (cond
+                                         (= depth 1) "•  "
+                                         (= depth 2) "   ‣  ")]
+                                 (if (string? content) [:span content] content)])]
+                   [:div {:class [:flex :flex-col :font-light]}
+                    [:span {:class [:font-medium]} "Education"]
+                    (bullet 1 "Junior at Worcester Polytechnic Institute (Expected graduation date: May 2028)")
+                    (bullet 1 "Currently pursuing a Bachelor of Science in Computer Science and Masters in Electrical Engineering")
+                    (bullet 1 "GPA: 3.7 | Dean’s List | Taking both undergraduate and graduate-level Computer Science courses")
+                    [:span {:class [:font-medium]} "Technical Skills"]
+                    (bullet 1 "Language Experience")
+                    (bullet 2 "Very skilled: C, ClojureScript, English, French, GLSL, WGSL, Zig")
+                    (bullet 2 "Adequately skilled: German, Haskell, JavaScript, Rust, SpinalHDL, Unity C#, Verilog, X86_64 Assembly")
+                    (bullet 2 "Basic skill: C++, RISC V Assembly, Uiua")
+                    (bullet 1 "Tools: Docker, Linux, MITMProxy, NixOS")
+                    [:span {:class [:font-medium]} "Work Experience"]
+                    (bullet 1 "Teaching Assistant at Kodai International School")
+                    (bullet 2 "Worked in the Computer Science and Engineering department")
+                    (bullet 2 "When a teacher was sick or couldn't make it to class, I made sure the students got their work done")
+                    (bullet 2 "Designed a small 3-degree-of-freedom robotic arm with an IK-based control scheme controlled by an Arduino.")
+                    [:span {:class [:font-medium]} "Projects"]
+                    (bullet 1 "Pizza Box Engine")
+                    (bullet 2 "My first C++ project. A raytracing first game engine inspired by Archean.")
+                    (bullet 2 [:span "Used it to teach me how to use the Vulkan API and C++. Also to get into lower level programming than Unity C#." [:br] "I have learnt much more about performant low level programming since then. Please don't judge me on that code."])])]])
+             :post-render (fn [state store] ())}}])
 
 (def page-names (doall (for [page config/site-definition] (s/replace (name (nth (keys page) 0))
                                                                      #"_" " "))))

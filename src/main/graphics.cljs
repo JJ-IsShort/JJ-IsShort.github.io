@@ -1,4 +1,7 @@
-(ns graphics)
+(ns graphics
+  (:require
+   [clojure.string :as str]
+   [config-utils :refer [ins]]))
 
 (set! *warn-on-infer* false)
 
@@ -37,10 +40,20 @@
                            :entries #js [#js {:binding 0
                                               :resource #js {:buffer buffer}}]})))
 
+(defn uniform->floats
+  "Converts a uniform value to a seq of floats with proper alignment.
+   Vectors get padded to 16 bytes (4 floats), scalars stay as 1 float."
+  [v]
+  (if (sequential? v)
+    (let [padded (take 4 (concat v (repeat 0.0)))]
+      padded)
+    [v]))
+
 (defn update-uniforms
   "Updates uniform buffer with new values"
   [^js device ^js buffer uniforms]
-  (let [data (js/Float32Array. (js/Object.values (clj->js uniforms)))]
+  (let [floats (mapcat uniform->floats (vals uniforms))
+        data (js/Float32Array. (clj->js floats))]
     (.writeBuffer (.-queue device) buffer 0 data)))
 
 (defn render-frame
@@ -70,6 +83,9 @@ struct VertexOutput {
 };
 
 struct Uniforms {
+  theme_color_1: vec4f,
+  theme_color_2: vec4f,
+  theme_color_3: vec4f,
   time: f32,
   mouse_x: f32,
   mouse_y: f32,
@@ -100,6 +116,9 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
   let x = coord.x;
   let y = coord.y;
   let time = uniforms.time;
+  let theme_color_1 = uniforms.theme_color_1.xyz;
+  let theme_color_2 = uniforms.theme_color_2.xyz;
+  let theme_color_3 = uniforms.theme_color_3.xyz;
   
   return vec4<f32>(" fragment-glsl ", 1.0);
 }
@@ -112,6 +131,13 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
   [canvas-id]
   (get @shader-canvases canvas-id))
 
+(defn hex->rgb [hex-str]
+  (let [clean-hex (str/replace hex-str "#" "")
+        r (js/parseInt (subs clean-hex 0 2) 16)
+        g (js/parseInt (subs clean-hex 2 4) 16)
+        b (js/parseInt (subs clean-hex 4 6) 16)]
+    [r g b]))
+
 (defn create-shader-canvas
   "Creates a new shader canvas with the given ID and initial shader expression.
    Returns a map with :canvas-id and control functions."
@@ -121,15 +147,18 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
                        :device nil
                        :context nil
                        :pipeline nil
-                       :uniforms {:time 0
-                                  :mouse-x 0
-                                  :mouse-y 0
-                                  :resolution-x width
-                                  :resolution-y height}
+                       :uniforms (let [computed-style (.-style (.querySelector js/document ":root"))]
+                                   {:theme_color_1 (map #(/ % 255) (hex->rgb (.trim (.getPropertyValue computed-style "--color-base"))))
+                                    :theme_color_2 (map #(/ % 255) (hex->rgb (.trim (.getPropertyValue computed-style "--color-text"))))
+                                    :theme_color_3 (map #(/ % 255) (hex->rgb (.trim (.getPropertyValue computed-style "--color-highlight"))))
+                                    :time 0
+                                    :mouse-x 0
+                                    :mouse-y 0
+                                    :resolution-x width
+                                    :resolution-y height})
                        :uniform-buffer nil
                        :expr initial-expr})]
 
-      ;; Initialize WebGPU
       (-> (js/navigator.gpu.requestAdapter)
           (.then (fn [^js adapter]
                    (.requestDevice adapter)))
@@ -177,6 +206,7 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
              :get-state (fn [] @state)}]
 
         (swap! shader-canvases assoc canvas-id controls)
+        controls
         controls))
     (let [controls (get-canvas-controls canvas-id)]
       ((:set-shader! controls) initial-expr))))

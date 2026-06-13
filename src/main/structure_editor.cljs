@@ -5,7 +5,7 @@
 
 (set! *warn-on-infer* false)
 
-(defonce editors-state (atom {:currently-selected nil :editor-state {}}))
+(defonce editors-state (atom {:currently-selected nil :editor-state {} :clipboard {}}))
 
 (defn activate-editor! [id]
   (swap! editors-state assoc :currently-selected id))
@@ -274,6 +274,10 @@
               (= key-lower "y")
               (append `New_Symbol)
 
+              (= key-lower "p")
+              (do (append (get-in @editors-state [:clipboard]))
+                  (println (get-in @editors-state [:clipboard])))
+
               (= key-lower "shift")
               nil
 
@@ -350,7 +354,7 @@
                 (do (swap! editors-state assoc-in [:editor-state active-id :current-editing] (vec (drop-last path)))
                     ((get-in @editors-state [:editor-state active-id :edited-callback]))))
 
-              (and (= key "d") ctrl?)
+              (= key "Backspace")
               (update-structure!
                active-id
                (fn [id structure]
@@ -365,6 +369,10 @@
                                (or (seq? current-selected) (vector? current-selected))
                                0)]))))
                  ; ((get-in @editors-state [:editor-state active-id :edited-callback]))))
+
+              (and (= key "c") ctrl?)
+              (swap! editors-state assoc-in [:clipboard]
+                     (seq-get-in @editors-state (into [:editor-state active-id :current-data] path)))
 
               (and (= key "e") ctrl?)
               (enter-edit-mode! active-id)

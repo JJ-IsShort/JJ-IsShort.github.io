@@ -1,0 +1,32 @@
+*E*
+Tried to use backspace for deleting.
+Keybinds were not obvious. Needed a lot of help.
+"Syntactically correct but not semantically correct".
+Bind hjkl
+
+1) The editor had a steep learning curve at the start, but one they got used to it they enjoyed it being tree based.
+2) Struggled actually configuring the CFG correctly. Imagines it would be pretty fun once you learn the editor.
+
+*R*
+Bind hjkl
+Has experience with structural editors. Developing.
+Map/Dictionary. Explaining more what the datatypes are.
+Making it clear what youre hovering over.
+Maps not showing the value being as selected makes sense its just weird.
+Should use natural numbers for weights.
+Making it clear that Term and Start are reserved and what they do.
+Personal Note: Highlight makes it difficult to see text.
+Personal Note: Colour code the help messages.
+"As I've gotten used to this this is really nice"
+Wrapping a datastructure in another should be a thing.
+Make appending after the default.
+Cursor in empty vector.
+Personal Note: Connect the structure creation help messages to the types of parentheses they make.
+Make clear that Dont_Delete can be edited.
+Control+Backspace in edit mode to clear the buffer.
+Copy a structural element. If included might not need wrapping.
+That html trick for the growing of the editing buffer doesn't work in firefox.
+Exponent builtin.
+Personal Note: Wow shes really enjoying this lol.
+Getting more comfortable with prepend being default. Still not better than append.
+Saving CFGs.
