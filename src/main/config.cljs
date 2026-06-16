@@ -71,7 +71,9 @@
                  [:div {:class [:flex-col]}
                   [:span "jsteinmetz@wpi.edu"]
                   [:span {:class [:font-bold]} " | "]
-                  [:span "JJ-IsShort"]
+                  [:a {:href "https://github.com/JJ-IsShort"} "JJ-IsShort"]
+                  [:span {:class [:font-bold]} " | "]
+                  [:a {:href "https://jj-isshort.github.io/"} "https://jj-isshort.github.io/"]
                   [:span {:class [:font-bold]} " | "]
                   [:span "Worcester, MA"]]]
                 [:div {:class [:flex :justify-center]}
@@ -79,6 +81,8 @@
                   [:span "Email"]
                   [:span {:class [:font-bold]} " | "]
                   [:span "Github"]
+                  [:span {:class [:font-bold]} " | "]
+                  [:span "Personal Website"]
                   [:span {:class [:font-bold]} " | "]
                   [:span "Home"]]]
                 [:div {:class [:flex :justify-center]}
@@ -92,12 +96,12 @@
                     [:span {:class [:font-medium]} "Education"]
                     (bullet 1 "Junior at Worcester Polytechnic Institute (Expected graduation date: May 2028)")
                     (bullet 1 "Currently pursuing a Bachelor of Science in Computer Science and Masters in Electrical Engineering")
-                    (bullet 1 "GPA: 3.7 | Dean’s List | Taking both undergraduate and graduate-level Computer Science courses")
+                    (bullet 1 "GPA: 3.7 | Taking both undergraduate and graduate-level Computer Science courses")
                     [:span {:class [:font-medium]} "Technical Skills"]
                     (bullet 1 "Language Experience")
                     (bullet 2 "Very skilled: C, ClojureScript, English, French, GLSL, WGSL, Zig")
-                    (bullet 2 "Adequately skilled: German, Haskell, JavaScript, Rust, SpinalHDL, Unity C#, Verilog, X86_64 Assembly")
-                    (bullet 2 "Basic skill: C++, RISC V Assembly, Uiua")
+                    (bullet 2 "Adequately skilled: German, Haskell, Rust, SpinalHDL, Unity C#, Verilog, X86_64 Assembly")
+                    (bullet 2 "Basic skill: C++, JavaScript/HTML/CSS, RISC V Assembly, Uiua")
                     (bullet 1 "Tools: Docker, Linux, MITMProxy, NixOS")
                     [:span {:class [:font-medium]} "Work Experience"]
                     (bullet 1 "Teaching Assistant at Kodai International School")
@@ -106,8 +110,19 @@
                     (bullet 2 "Designed a small 3-degree-of-freedom robotic arm with an IK-based control scheme controlled by an Arduino.")
                     [:span {:class [:font-medium]} "Projects"]
                     (bullet 1 "Pizza Box Engine")
-                    (bullet 2 "My first C++ project. A raytracing first game engine inspired by Archean.")
-                    (bullet 2 [:span "Used it to teach me how to use the Vulkan API and C++. Also to get into lower level programming than Unity C#." [:br] "I have learnt much more about performant low level programming since then. Please don't judge me on that code."])])]])
+                    (bullet 2 "My first C++ project. A raytracing first game engine inspired by the Archean game engine.")
+                    (bullet 2 [:span "Used it to teach me how to use the Vulkan API and C++. Also to get into lower level programming than Unity C#." [:br] "I have learnt much more about performant low level programming since then. Please don't judge me on that code."])
+                    (bullet 1 "Personal Website")
+                    (bullet 2 "Written fully in ClojureScript. CSS handled through Tailwind CSS. HTML Handled through replicant.")
+                    (bullet 2 "Hosts this resume with more details as well as my personal blog.")])]
+                (when (get state :show_header true)
+                  [:div {:class ["w-[40%]" :h-6 :flex :justify-center (styling/color-tag "bg" :highlight) :rounded-lg :mx-auto :my-4
+                                 "hover:bg-[color-mix(in_hsl,var(--color-highlight)_50%,_transparent_50%)]"]
+                         :on {:click #(do
+                                        (swap! store assoc :show_header false)
+                                        (js/print)
+                                        (swap! store assoc :show_header true))}}
+                   [:span {:class [(styling/color-tag "text" :base)]} "Print"]])])
              :post-render (fn [state store] ())}}])
 
 (def page-names (doall (for [page config/site-definition] (s/replace (name (nth (keys page) 0))

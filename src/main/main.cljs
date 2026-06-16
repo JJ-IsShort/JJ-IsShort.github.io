@@ -95,107 +95,110 @@
 
 (defn make-page [state]
   [:div {:class [:min-h-screen]}
-   [:div {:class [:fixed :inset-0 :overflow-hidden :pointer-events-none :z-50]}
-    [:div {:class ["w-[calc(100%_-_var(--spacing)_*_4)]" :border-3 (styling/color-tag "border" :highlight)
-                   :h-16 :m-2 (styling/color-tag "bg" :base) :absolute :flex "z-50" :pointer-events-auto]}
-     [:div {:class ["basis-1/3"]} ; Left bar section
-      [:div {:class ["my-[5px]" "h-[calc(100%-5px*2)]" "ml-[5px]" :rounded-md :relative]}
-       [:span {:class ["material-symbols-outlined"
-                       :h-full
-                       :aspect-square
-                       :block
-                       :cursor-pointer]
-               :style {:color "var(--color-text)"
-                       :font-size "300%"
-                       :line-height 1}
-               :on {:click #(swap! store assoc :settings-opened (not (get-in state [:settings-opened] false)))}} "settings"]]]
-     [:div {:class ["basis-1/3"]}] ; Centre bar section
-     [:div {:class ["basis-1/3"]} ; Right bar section
-      [:div {:class ["my-[5px]" "h-[calc(100%-5px*2)]" "mr-[5px]" :rounded-md :relative :cursor-pointer]
-             :id "pageNameParent"
-             :on (when-not (:active (:taskbar-page-select state))
-                   {:click #_{:clj-kondo/ignore [:unused-binding]}
-                    (fn [e] (do (swap! store assoc :taskbar-page-select {:active true :mouse-y-start (:y mouse-pos)})
-                                (handle-next-click handle-page-select-interact)))})}
-       [:div {:class ["bg-[image:radial-gradient(_var(--color-base)_40%,_transparent_60%)]"
-                      :size-256 :absolute "top-[50%]" "left-[100%]" "translate-[-50%]"
-                      :transition-transform
-                      (if (:active (:taskbar-page-select state)) :scale-100 :scale-0) :duration-700]
-              :id "pageNameObscure"}]
+   (when (get state :show_header true)
+     [:div {:class [:fixed :inset-0 :overflow-hidden :pointer-events-none :z-50]}
+      [:div {:class ["w-[calc(100%_-_var(--spacing)_*_4)]" :border-3 (styling/color-tag "border" :highlight)
+                     :h-16 :m-2 (styling/color-tag "bg" :base) :absolute :flex "z-50" :pointer-events-auto]}
+       [:div {:class ["basis-1/3"]} ; Left bar section
+        [:div {:class ["my-[5px]" "h-[calc(100%-5px*2)]" "ml-[5px]" :rounded-md :relative]}
+         [:span {:class ["material-symbols-outlined"
+                         :h-full
+                         :aspect-square
+                         :block
+                         :cursor-pointer]
+                 :style {:color "var(--color-text)"
+                         :font-size "300%"
+                         :line-height 1}
+                 :on {:click #(swap! store assoc :settings-opened (not (get-in state [:settings-opened] false)))}} "settings"]]]
+       [:div {:class ["basis-1/3"]}] ; Centre bar section
+       [:div {:class ["basis-1/3"]} ; Right bar section
+        [:div {:class ["my-[5px]" "h-[calc(100%-5px*2)]" "mr-[5px]" :rounded-md :relative :cursor-pointer]
+               :id "pageNameParent"
+               :on (when-not (:active (:taskbar-page-select state))
+                     {:click #_{:clj-kondo/ignore [:unused-binding]}
+                      (fn [e] (do (swap! store assoc :taskbar-page-select {:active true :mouse-y-start (:y mouse-pos)})
+                                  (handle-next-click handle-page-select-interact)))})}
+         [:div {:class ["bg-[image:radial-gradient(_var(--color-base)_40%,_transparent_60%)]"
+                        :size-256 :absolute "top-[50%]" "left-[100%]" "translate-[-50%]"
+                        :transition-transform
+                        (if (:active (:taskbar-page-select state)) :scale-100 :scale-0) :duration-700]
+                :id "pageNameObscure"}]
 
-       [:div {:class [:absolute "size-[48px]" "-left-[40px]"]}
-        [:img {:id "pageNameSelector"
-               :style {:translate (animation/animatable :pageNameSelector-Trans -80
-                                                        (if (:active (:taskbar-page-select state)) 0 -80)
-                                                        0.9 #(str "0px " % "px") "pageNameSelector"
-                                                        (fn [el val] (set! (.-translate (.-style el)) val)))
-                       :mask "url(\"assets/app/svg/page_name_selector.svg\") no-repeat center"
-                       :-webkit-mask "url(\"assets/app/svg/page_name_selector.svg\") no-repeat center"
-                       :width 40 :height 40
-                       :background-color "var(--color-text)"}}]]
-       [:div {:class [:absolute "size-[48px]" "-right-[48px]"]}
-        [:div {:class [:relative]}
-         [:img {:class [:scale-300 :absolute]
-                :id "pageNamePanel-Dial"
-                :style {:rotate (animation/animatable :pageNamePanel-Dial-Rot 0
-                                                      (if (:active (:taskbar-page-select state))
-                                                        (page-name-rotation (:mouse-y-start (:taskbar-page-select state)) (:y mouse-pos) 0 (:active (:taskbar-page-select state)))
-                                                        0)
-                                                      0.9 #(str % "deg") "pageNamePanel-Dial"
-                                                      (fn [el val] (set! (.-rotate (.-style el)) val)))
-                        :translate (animation/animatable :pageNamePanel-Dial-Trans 60
-                                                         (if (:active (:taskbar-page-select state)) 0 60)
-                                                         0.9 #(str % "px") "pageNamePanel-Dial"
-                                                         (fn [el val] (set! (.-translate (.-style el)) val)))
-                        :mask "url(\"assets/app/svg/page_name_dial.svg\") no-repeat center"
-                        :-webkit-mask "url(\"assets/app/svg/page_name_dial.svg\") no-repeat center"
-                        :width 48 :height 48
-                        :background-color "var(--color-text)"}}]]]
+         [:div {:class [:absolute "size-[48px]" "-left-[40px]"]}
+          [:img {:id "pageNameSelector"
+                 :style {:translate (animation/animatable :pageNameSelector-Trans -80
+                                                          (if (:active (:taskbar-page-select state)) 0 -80)
+                                                          0.9 #(str "0px " % "px") "pageNameSelector"
+                                                          (fn [el val] (set! (.-translate (.-style el)) val)))
+                         :mask "url(\"assets/app/svg/page_name_selector.svg\") no-repeat center"
+                         :-webkit-mask "url(\"assets/app/svg/page_name_selector.svg\") no-repeat center"
+                         :width 40 :height 40
+                         :background-color "var(--color-text)"}}]]
+         [:div {:class [:absolute "size-[48px]" "-right-[48px]"]}
+          [:div {:class [:relative]}
+           [:img {:class [:scale-300 :absolute]
+                  :id "pageNamePanel-Dial"
+                  :style {:rotate (animation/animatable :pageNamePanel-Dial-Rot 0
+                                                        (if (:active (:taskbar-page-select state))
+                                                          (page-name-rotation (:mouse-y-start (:taskbar-page-select state)) (:y mouse-pos) 0 (:active (:taskbar-page-select state)))
+                                                          0)
+                                                        0.9 #(str % "deg") "pageNamePanel-Dial"
+                                                        (fn [el val] (set! (.-rotate (.-style el)) val)))
+                          :translate (animation/animatable :pageNamePanel-Dial-Trans 60
+                                                           (if (:active (:taskbar-page-select state)) 0 60)
+                                                           0.9 #(str % "px") "pageNamePanel-Dial"
+                                                           (fn [el val] (set! (.-translate (.-style el)) val)))
+                          :mask "url(\"assets/app/svg/page_name_dial.svg\") no-repeat center"
+                          :-webkit-mask "url(\"assets/app/svg/page_name_dial.svg\") no-repeat center"
+                          :width 48 :height 48
+                          :background-color "var(--color-text)"}}]]]
 
-       [:div {:class [:absolute "top-1/2" "right-0" "-translate-y-1/2" :size-full]
-              :id "pageNameRotate"}
-        [:div {:class ["h-[48px]" :flex :items-center :pr-2 :absolute "right-0"
-                       "origin-[calc(100%+80px)_50%]"]
-               :id "pageNamePanel-First"
-               :style {:rotate (animation/animatable :pageNamePanel-First-Rot 0
-                                                     (if (:active (:taskbar-page-select state))
-                                                       (page-name-rotation (:mouse-y-start (:taskbar-page-select state)) (:y mouse-pos) 0 (:active (:taskbar-page-select state)))
-                                                       0)
-                                                     0.9 #(str % "deg") "pageNamePanel-First"
-                                                     (fn [el val] (set! (.-rotate (.-style el)) val)))
-                       :translate (animation/animatable :pageNamePanel-First-Trans 0
-                                                        (if (:active (:taskbar-page-select state)) -60 0)
-                                                        0.9 #(str % "px") "pageNamePanel-First"
-                                                        (fn [el val] (set! (.-translate (.-style el)) val)))}}
-         [:div {:class [:ml-2 :h-fit]}
-          [:div {:class [:text-2xl :font-black]}
-           (:location/page-id (:selected-page state))]]]
-        (for [[i page-name] (map-indexed vector (:page-names state))]
-          (let [id (str "pageNamePanel-" (hash i))]
-            [:div {:class ["h-[48px]" :flex :items-center :pr-2 :absolute "right-0"
-                           "origin-[calc(100%+80px)_50%]"]
+         [:div {:class [:absolute "top-1/2" "right-0" "-translate-y-1/2" :size-full]
+                :id "pageNameRotate"}
+          [:div {:class ["h-[48px]" :flex :items-center :pr-2 :absolute "right-0"
+                         "origin-[calc(100%+80px)_50%]"]
+                 :id "pageNamePanel-First"
+                 :style {:rotate (animation/animatable :pageNamePanel-First-Rot 0
+                                                       (if (:active (:taskbar-page-select state))
+                                                         (page-name-rotation (:mouse-y-start (:taskbar-page-select state)) (:y mouse-pos) 0 (:active (:taskbar-page-select state)))
+                                                         0)
+                                                       0.9 #(str % "deg") "pageNamePanel-First"
+                                                       (fn [el val] (set! (.-rotate (.-style el)) val)))
+                         :translate (animation/animatable :pageNamePanel-First-Trans 0
+                                                          (if (:active (:taskbar-page-select state)) -60 0)
+                                                          0.9 #(str % "px") "pageNamePanel-First"
+                                                          (fn [el val] (set! (.-translate (.-style el)) val)))}}
+           [:div {:class [:ml-2 :h-fit]}
+            [:div {:class [:text-2xl :font-black]}
+             (:location/page-id (:selected-page state))]]]
+          (for [[i page-name] (map-indexed vector (:page-names state))]
+            (let [id (str "pageNamePanel-" (hash i))]
+              [:div {:class ["h-[48px]" :flex :items-center :pr-2 :absolute "right-0"
+                             "origin-[calc(100%+80px)_50%]"]
 
-                   :id id
-                   :style {:rotate (animation/animatable (keyword (str id "-Rot")) -90
-                                                         (page-name-rotation (:mouse-y-start (:taskbar-page-select state)) (:y mouse-pos) (inc i) (:active (:taskbar-page-select state)))
-                                                         0.9 #(str % "deg") id
-                                                         (fn [el val] (set! (.-rotate (.-style el)) val)))
-                           :scale (animation/animatable (keyword (str id "-Scale")) -90
-                                                        (if (< (abs (animation/get-current (keyword (str id "-Rot")))) 8) 1.2 1)
-                                                        0.8 #(str %) id
-                                                        (fn [el val] (set! (.-scale (.-style el)) val)))
-                           :translate (animation/animatable (keyword (str id "-Trans")) 0
-                                                            (if (:active (:taskbar-page-select state)) -60 0)
-                                                            0.9 #(str % "px") id
-                                                            (fn [el val] (set! (.-translate (.-style el)) val)))}}
-             [:div {:class [:ml-2 :w-full :h-fit]}
-              [:div {:class [:text-lg :font-black]}
-               page-name]]]))]]]]
-    (settings_bar state)]
+                     :id id
+                     :style {:rotate (animation/animatable (keyword (str id "-Rot")) -90
+                                                           (page-name-rotation (:mouse-y-start (:taskbar-page-select state)) (:y mouse-pos) (inc i) (:active (:taskbar-page-select state)))
+                                                           0.9 #(str % "deg") id
+                                                           (fn [el val] (set! (.-rotate (.-style el)) val)))
+                             :scale (animation/animatable (keyword (str id "-Scale")) -90
+                                                          (if (< (abs (animation/get-current (keyword (str id "-Rot")))) 8) 1.2 1)
+                                                          0.8 #(str %) id
+                                                          (fn [el val] (set! (.-scale (.-style el)) val)))
+                             :translate (animation/animatable (keyword (str id "-Trans")) 0
+                                                              (if (:active (:taskbar-page-select state)) -60 0)
+                                                              0.9 #(str % "px") id
+                                                              (fn [el val] (set! (.-translate (.-style el)) val)))}}
+               [:div {:class [:ml-2 :w-full :h-fit]}
+                [:div {:class [:text-lg :font-black]}
+                 page-name]]]))]]]]
+      (settings_bar state)])
    [:div {:class [:w-full :min-h-screen :pointer-events-none]}
     [:div {:class [:w-full :h-full (styling/color-tag "bg" :base) "-z-50" :fixed]}]
-    [:div {:class [:w-full :h-20 :pointer-events-none]}]
-    [:div {:class [:w-full :h-8 :pointer-events-none]}]
+    (when (get state :show_header true)
+      [:div {:class [:w-full :h-20 :pointer-events-none]}])
+    (when (get state :show_header true)
+      [:div {:class [:w-full :h-8 :pointer-events-none]}])
     [:div {:class [:pointer-events-auto]}
      ((config/get-page-def (:location/page-id (:selected-page state)) :render) state store)]
     [:div {:class [:w-full :h-8]}]]])
