@@ -64,25 +64,27 @@
                                   ((:post-render (:callbacks project-page)) state store))))}}
    {:Resume {:render
              (fn [state store]
-               [:div {:class [:flex-row :justify-center]}
+               [:div {:class [:flex-row :justify-center :text-sm]}
                 [:div {:class [:flex :justify-center]}
-                 [:span {:class [:text-4xl :font-bold]} "Jai Steinmetz"]]
+                 [:span {:class [:text-3xl :font-bold]} "Jai Steinmetz"]]
+                [:div {:class [:flex :justify-center]}
+                 [:div {:class [:flex-col]}
+                  [:a {:href "https://github.com/JJ-IsShort"} "JJ-IsShort"]
+                  [:span {:class [:font-bold]} " | "]
+                  [:a {:href "https://jj-isshort.github.io/"} "https://jj-isshort.github.io/"]]]
+                [:div {:class [:flex :justify-center]}
+                 [:div {:class [:flex-col :font-light]}
+                  [:span "Github"]
+                  [:span {:class [:font-bold]} " | "]
+                  [:span "Personal Website"]]]
                 [:div {:class [:flex :justify-center]}
                  [:div {:class [:flex-col]}
                   [:span "jsteinmetz@wpi.edu"]
-                  [:span {:class [:font-bold]} " | "]
-                  [:a {:href "https://github.com/JJ-IsShort"} "JJ-IsShort"]
-                  [:span {:class [:font-bold]} " | "]
-                  [:a {:href "https://jj-isshort.github.io/"} "https://jj-isshort.github.io/"]
                   [:span {:class [:font-bold]} " | "]
                   [:span "Worcester, MA"]]]
                 [:div {:class [:flex :justify-center]}
                  [:div {:class [:flex-col :font-light]}
                   [:span "Email"]
-                  [:span {:class [:font-bold]} " | "]
-                  [:span "Github"]
-                  [:span {:class [:font-bold]} " | "]
-                  [:span "Personal Website"]
                   [:span {:class [:font-bold]} " | "]
                   [:span "Home"]]]
                 [:div {:class [:flex :justify-center]}
@@ -111,10 +113,17 @@
                     [:span {:class [:font-medium]} "Projects"]
                     (bullet 1 "Pizza Box Engine")
                     (bullet 2 "My first C++ project. A raytracing first game engine inspired by the Archean game engine.")
-                    (bullet 2 [:span "Used it to teach me how to use the Vulkan API and C++. Also to get into lower level programming than Unity C#." [:br] "I have learnt much more about performant low level programming since then. Please don't judge me on that code."])
+                    (bullet 2 [:span "Used it to teach me how to use the Vulkan API and C++. Also to get into lower level programming than Unity C#."]) ; [:br] "I have learnt much more about performant low level programming since then. Please don't judge me on that code."])
                     (bullet 1 "Personal Website")
                     (bullet 2 "Written fully in ClojureScript. CSS handled through Tailwind CSS. HTML Handled through replicant.")
-                    (bullet 2 "Hosts this resume with more details as well as my personal blog.")])]
+                    (bullet 2 "Hosts this resume with more details as well as my personal blog.")
+                    (bullet 1 "Multi-threaded Raytracer")
+                    (bullet 2 "In-class project. I was given a single threaded raytracer in C and used POSIX threads to distribute the work across CPU cores.")
+                    (bullet 2 "Double buffering to overlap IO and frame rendering. Multithreaded physics and frame rendering with a queue and some semaphores.")
+                    (bullet 2 "All self-written code. No libraries were used.")
+                    (bullet 1 "Cybersecurity Class")
+                    (bullet 2 "Took part in a cybersecurity class at WPI. CS 557. The class went as far as kernel exploitation (although not in too much detail).")
+                    (bullet 2 "We were given CTFs that taught us stack exploitation, executing arbitrary asm, rop, heap exploitation, and a few more topics.")])]
                 (when (get state :show_header true)
                   [:div {:class ["w-[40%]" :h-6 :flex :justify-center (styling/color-tag "bg" :highlight) :rounded-lg :mx-auto :my-4
                                  "hover:bg-[color-mix(in_hsl,var(--color-highlight)_50%,_transparent_50%)]"]
