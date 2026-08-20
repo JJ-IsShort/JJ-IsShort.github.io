@@ -36,18 +36,23 @@
                                              [:div "[U] - Done, not written up"]
                                              [:div "[W] - Work in progress"]
                                              [:div "[A] - Abandoned"]
-                                             [:div "[ ] - Unplanned"]]
-                                            [(into [:div {:class [:w-222]}]
-                                                   (utils/text->divs "╭ [A] Ray tracing first game engine (Pizza Box Engine)
-                                                          ╰ [W] The rest of my projects lol. I need to populate this and it will be a lot of work"))]])
-                              (utils/panel "Pizza_Box_Engine.cpp"
+                                             [:div "[ ] - Unplanned"]]])
+                                            ; [(into [:div {:class [:w-222]}]
+                                            ;        (utils/text->divs "╭ [A] Ray tracing first game engine (Pizza Box Engine)
+                                            ;               ╰ [W] The rest of my projects lol. I need to populate this and it will be a lot of work"))]])
+                              (utils/panel "Pizza_Box_Engine.cpp [A]"
                                            [[(into [:div {:class [:w-222]}]
                                                    (utils/text->divs "This was an attempt to make a ray tracing first game engine, with optimizations that only fully ray traced (as in VK_KHR_ray_tracing_pipeline instead of VK_KHR_ray_query in a fragment shader) rendering can provide.
                                                
                                                       I wanted to try to make a game engine for a while, and wanted to make a GPU-accelerated ray traced renderer for a while, and decided to combine the two. I realized that OpenGL did not have the required APIs to do hardware accelerated ray tracing, so I learnt Vulkan. I chose Vulkan and not DirectX for the cross platform nature, which would go on to be useful as I switched to Linux shortly after starting this project. I decided to do this in C++ because all the Vulkan examples and tutorials were in C++. I did not have enough graphics experience to use any other language or the best taste in languages. I also wanted to learn C++ because I had only ever did a small amount of C++ before and wanted to make a full complex project using it."))]
                                             [(into [:div {:class [:w-222]}]
-                                                   (utils/text->divs "Eventually I did abandon it. I had started the project with not as much understanding of C++ as I should've and the technical debt from bad decisions the start of the project started becoming too annoying to continue working on it. C++ was a bad language to pick. I now know that C++ is just in general a bad language in my personal opinion. I also now know far more about graphics programming and now know that I made a few small mistakes that really would've caused problems in the future. I got as far as rendering one triangle using GPU accelerated ray tracing onto a Dear ImGUI utils/panel as well as having a component system and a basic inspector."))]]))
-                             (if-let [project-page (first (filter #(= (:id %) (keyword page-args)) project-pages))]
+                                                   (utils/text->divs "Eventually I did abandon it. I had started the project with not as much understanding of C++ as I should've and the technical debt from bad decisions the start of the project started becoming too annoying to continue working on it. C++ was a bad language to pick. I now know that C++ is just in general a bad language in my personal opinion. I also now know far more about graphics programming and now know that I made a few small mistakes that really would've caused problems in the future. I got as far as rendering one triangle using GPU accelerated ray tracing onto a Dear ImGUI utils/panel as well as having a component system and a basic inspector."))]])
+                              (utils/panel "Random Shader [*]"
+                                           [[(into [:div {:class [:w-222]}]
+                                                   (utils/text->divs "For a class I made a tool to edit clojure s-expressions in an in-browser editor. Using it the user can program a Context Free Grammar that will be used to randomly generate a wgsl shader and render it with webgpu. I am not the most happy with the resulting editor. I have a list of changes that it would benefit from. The main one being avoiding the ability to write \"Syntactically correct but not semantically correct\" s-expressions that can't be used properly to generate a shader."))]
+                                            [[:div {:on {:click (fn [] (routing/jump-to "#/Projects/random-shader" page-names store))}}
+                                              "Press to Access"]]]))  
+                            (if-let [project-page (first (filter #(= (:id %) (keyword page-args)) project-pages))]
                                ((:render (:callbacks project-page)) state store)
                                [:div {:class [:flex :justify-center]}
                                 [:div {:class [:flex :flex-col
