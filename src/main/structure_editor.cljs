@@ -43,9 +43,9 @@
 (defn dispatch
   "Given the current state and key history
    returns either:
-     {:status :action  :func f    :name s}  — leaf reached, call f
-     {:status :prefix  :name s}             — valid prefix, keep buffering
-     {:status :no-match}                    — dead end"
+     {:status :action  :func f    :name s}  - leaf reached, call f
+     {:status :prefix  :name s}             - valid prefix, keep buffering
+     {:status :no-match}                    - dead end"
   [mappings state key-history]
   (let [node (get-node mappings state key-history)]
     (cond

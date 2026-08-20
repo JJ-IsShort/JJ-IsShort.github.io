@@ -27,6 +27,11 @@
        (.addEventListener js/document "click" handler)))
    0))
 
+(.addEventListener js/window "popstate" 
+                   (fn []
+                    (swap! store assoc :selected-page (routing/extract-location
+                                                        js/location.hash config/page-names))))
+
 (defn handle-page-select-interact
   ([e] (let [angle (mod (animation/get-current :pageNamePanel-First-Rot) 360)]
          (when-not
