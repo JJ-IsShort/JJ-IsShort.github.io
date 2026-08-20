@@ -31,7 +31,7 @@
                          (let [page-args (:location/path (:selected-page state))]
                            (if-not page-args
                              (utils/panel-container
-                              (utils/panel "Projects_List.txt"
+                              (utils/panel "Projects_List"
                                            [[[:div "[*] - Done, linked"]
                                              [:div "[U] - Done, not written up"]
                                              [:div "[W] - Work in progress"]
